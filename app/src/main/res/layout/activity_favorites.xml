@@ -7,6 +7,10 @@
     android:layout_height="match_parent"
     tools:context=".activities.FavoritesActivity">
 
+    <!--
+    Define a aparência da tela de favoritos.
+    -->
+
     <ImageView
         android:id="@+id/imageView2"
         android:layout_width="0dp"

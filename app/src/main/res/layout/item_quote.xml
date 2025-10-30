@@ -9,6 +9,10 @@
     android:backgroundTint="@android:color/white"
     android:elevation="2dp">
 
+    <!--
+    Define a aparência de um único item (card) dentro do RecyclerView.
+    -->
+
     <TextView
         android:id="@+id/txtContent"
         android:layout_width="match_parent"

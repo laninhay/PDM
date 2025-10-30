@@ -13,49 +13,68 @@ import com.unir.av1_pdm.utils.FavoritesHelper;
 import com.unir.av1_pdm.utils.TranslateHelper;
 import java.util.List;
 
+// Declaração da classe, também implementando a interface do adaptador.
 public class FavoritesActivity extends AppCompatActivity implements QuoteAdapter.OnQuoteClickListener {
 
-    private RecyclerView recyclerView;
-    private QuoteAdapter adapter;
-    private List<Quote> favoriteQuotes;
+    private RecyclerView recyclerView; // A lista visual.
+    private QuoteAdapter adapter; // O adaptador.
+    private List<Quote> favoriteQuotes; // A lista de dados (favoritos).
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_favorites); // Layout que você já tinha
+        // Liga esta classe ao layout XML "activity_favorites.xml".
+        setContentView(R.layout.activity_favorites);
 
+        // Linka a variável do RecyclerView ao componente do XML.
         recyclerView = findViewById(R.id.recyclerViewFavoritos);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Título da Activity
+        // Configura a barra de título (ActionBar).
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(R.string.title_activity_favorites);
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Botão de voltar
+            getSupportActionBar().setTitle(R.string.title_activity_favorites); // Define o título da tela.
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Mostra o botão "voltar" (seta) na barra.
         }
     }
 
+    // Método chamado *toda vez* que o usuário retorna para esta tela.
+    // É usado "onResume" em vez de "onCreate" para garantir que a lista
+    // seja atualizada caso o usuário remova um item e volte.
     @Override
     protected void onResume() {
         super.onResume();
-        loadFavorites(); // Carrega/Recarrega os favoritos sempre que a tela é exibida
+        loadFavorites(); // Chama o método para carregar (ou recarregar) os favoritos.
     }
 
+    // Método privado que carrega os favoritos do SharedPreferences.
     private void loadFavorites() {
+        // Carrega a lista salva usando o FavoritesHelper.
         favoriteQuotes = FavoritesHelper.loadFavorites(this);
-        adapter = new QuoteAdapter(favoriteQuotes, this, true); // true = é lista de favoritos
+
+        // Cria o adaptador.
+        // "this" é o listener.
+        // "true" indica que esta *é* a lista de favoritos (o adaptador usará o ícone de remover).
+        adapter = new QuoteAdapter(favoriteQuotes, this, true);
         recyclerView.setAdapter(adapter);
     }
 
-    // Clique no ícone de favorito (aqui significa REMOVER)
+    // Método OBRIGATÓRIO (da interface).
+    // É chamado pelo adaptador ao clicar no ícone de favorito.
+    // IMPORTANTE: Na tela de favoritos, este clique significa REMOVER.
     @Override
     public void onFavoriteClick(Quote quote, int position) {
+        // Remove o favorito do SharedPreferences (disco).
         FavoritesHelper.removeFavorite(this, quote);
+        // Remove o favorito da lista local (memória).
         favoriteQuotes.remove(position);
+        // Notifica o adaptador que o item *específico* foi removido (para uma animação suave).
         adapter.notifyItemRemoved(position);
+        // Mostra o feedback de remoção.
         Toast.makeText(this, R.string.toast_removed_favorite, Toast.LENGTH_SHORT).show();
     }
 
-    // Clique no ícone de traduzir
+    // Método OBRIGATÓRIO (da interface).
+    // Exatamente igual ao da MainActivity.
     @Override
     public void onTranslateClick(Quote quote, int position) {
         TranslateHelper.translate(quote.getQuote(), new TranslateHelper.OnTranslateListener() {
@@ -71,7 +90,7 @@ public class FavoritesActivity extends AppCompatActivity implements QuoteAdapter
         });
     }
 
-    // Exibe o diálogo com a tradução
+    // Exibe o diálogo com a tradução (igual ao da MainActivity).
     private void showTranslationDialog(String author, String translatedText) {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.translation_title, author))
@@ -80,9 +99,10 @@ public class FavoritesActivity extends AppCompatActivity implements QuoteAdapter
                 .show();
     }
 
+    // Método chamado quando o usuário clica no botão "voltar" (seta) da ActionBar.
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed(); // Trata o clique no botão de voltar da ActionBar
+        onBackPressed(); // Simula o clique no botão "voltar" físico do dispositivo.
         return true;
     }
 }
