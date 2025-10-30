@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">AV1-PDM</string>
+    <string name="app_name">InspireTranslate</string> <string name="toast_inform_author">Por favor, informe o nome de um autor.</string>
+    <string name="toast_author_not_found">Autor não encontrado ou sem citações.</string>
+    <string name="toast_api_error">Erro na API: %s</string>
+    <string name="toast_added_favorite">Adicionado aos favoritos!</string>
+    <string name="toast_already_favorite">Esta citação já está nos favoritos.</string>
+
+    <string name="title_activity_favorites">Citações Favoritas</string>
+    <string name="toast_removed_favorite">Removido dos favoritos.</string>
+
+    <string name="translation_title">Tradução (%s)</string>
 </resources>

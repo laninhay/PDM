@@ -2,26 +2,13 @@ package com.unir.av1_pdm.utils;
 
 import android.os.Handler;
 import android.os.Looper;
-
+import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-/**
- * Classe utilitária para traduzir texto usando a API Lingva Translate.
- * Exemplo de uso:
- * TranslateHelper.translate("Hello world", new TranslateHelper.OnTranslateListener() {
- *     @Override
- *     public void onSuccess(String translatedText) {
- *         // atualizar UI aqui
- *     }
- *     @Override
- *     public void onError(String errorMessage) {
- *         // tratar erro
- *     }
- * });
- */
 public class TranslateHelper {
 
     public interface OnTranslateListener {
@@ -30,41 +17,57 @@ public class TranslateHelper {
     }
 
     public static void translate(final String text, final OnTranslateListener listener) {
-        // Executa a tradução em uma thread separada
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String encoded = URLEncoder.encode(text, "UTF-8");
-                    URL url = new URL("https://lingva.ml/api/v1/en/pt/" + encoded);
-                    BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        result.append(line);
-                    }
-                    in.close();
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                String encodedText = URLEncoder.encode(text, "UTF-8");
+                String urlString = "https://api.mymemory.translated.net/get?q=" + encodedText + "&langpair=en|pt";
+                URL url = new URL(urlString);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android) YourApp/1.0");
 
-                    final String translatedText = result.toString().replace("\"", "").trim();
+                int responseCode = connection.getResponseCode();
+                BufferedReader reader;
+                if (responseCode == 200) {
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                } else {
+                    reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                }
 
-                    // Volta para a thread principal (UI)
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onSuccess(translatedText);
-                        }
-                    });
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
 
-                } catch (final Exception e) {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onError("Erro na tradução: " + e.getMessage());
-                        }
-                    });
+                // Log para depuração (opcional)
+                // Log.d("TranslateAPI", "Response: " + response.toString());
+
+                JSONObject jsonResponse = new JSONObject(response.toString());
+                JSONObject responseData = jsonResponse.getJSONObject("responseData");
+                String translatedText = responseData.getString("translatedText");
+
+                if (translatedText != null && !translatedText.trim().isEmpty()) {
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            listener.onSuccess(translatedText)
+                    );
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() ->
+                            listener.onError("Tradução vazia.")
+                    );
+                }
+
+            } catch (Exception e) {
+                new Handler(Looper.getMainLooper()).post(() ->
+                        listener.onError("Erro na tradução: " + e.getMessage())
+                );
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
                 }
             }
         }).start();
     }
 }
-
